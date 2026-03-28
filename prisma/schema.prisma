@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  DISPUTED
+  CANCELED
+}
+
+enum PaymentStatus {
+  ESCROW
+  RELEASED
+  REFUNDED
+  FAILED
+}
+
+enum DisputeFiledBy {
+  CUSTOMER
+  PROVIDER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String
+  password  String
+  role      UserRole
+  darkMode  Boolean  @default(false) @map("dark_mode")
+  avatar    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  providers          Provider[]
+  bookingsAsCustomer Booking[]          @relation("CustomerBookings")
+  reviews            Review[]
+  disputesAsFiledBy  Dispute[]          @relation("DisputeFiledBy")
+  @@map("users")
+}
+
+model Provider {
+  id                   String            @id @default(cuid())
+  userId               String            @map("user_id")
+  user                 User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category             String
+  description          String
+  price                Float
+  rating               Float             @default(0)
+  verified             Boolean           @default(false)
+  verificationStatus   VerificationStatus @map("verification_status")
+  idDocumentUrl        String            @map("id_document_url")
+  certificateUrls      Json              @map("certificate_urls")
+  approvedAt           DateTime?         @map("approved_at")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+
+  services Service[]
+  reviews  Review[]
+  bookings Booking[]
+  @@map("providers")
+}
+
+model ServiceCategory {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  images      Json
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  services Service[]
+  @@map("service_categories")
+}
+
+model Service {
+  id            String   @id @default(cuid())
+  providerId    String            @map("provider_id")
+  provider      Provider @relation(fields: [providerId], references: [id])
+  categoryId    String            @map("category_id")
+  category      ServiceCategory @relation(fields: [categoryId], references: [id])
+  name          String
+  description   String
+  basePrice     Float             @map("base_price")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  bookings Booking[]
+  @@map("services")
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  customerId         String            @map("customer_id")
+  customer           User              @relation("CustomerBookings", fields: [customerId], references: [id])
+  providerId         String            @map("provider_id")
+  provider           Provider          @relation(fields: [providerId], references: [id])
+  serviceId          String            @map("service_id")
+  service            Service           @relation(fields: [serviceId], references: [id])
+  status             BookingStatus
+  scheduledTime      DateTime          @map("scheduled_time")
+  gpsLat             Float?            @map("gps_lat")
+  gpsLng             Float?            @map("gps_lng")
+  evidencePhotos     Json?             @map("evidence_photos")
+  totalAmount        Float             @map("total_amount")
+  providerConfirmed  Boolean           @default(false) @map("provider_confirmed")
+  customerConfirmed  Boolean           @default(false) @map("customer_confirmed")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+
+  payments Payment[]
+  reviews  Review[]
+  disputes Dispute[]
+  @@map("bookings")
+}
+
+model Payment {
+  id         String        @id @default(cuid())
+  bookingId  String            @map("booking_id")
+  booking    Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount     Float
+  status     PaymentStatus
+  stripePaymentId String?      @map("stripe_payment_id")
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+  @@map("payments")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String            @map("booking_id")
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customerId String            @map("customer_id")
+  customer   User     @relation(fields: [customerId], references: [id])
+  providerId String            @map("provider_id")
+  provider   Provider @relation(fields: [providerId], references: [id])
+  rating     Int
+  comment    String
+  createdAt  DateTime          @default(now()) @map("created_at")
+  @@map("reviews")
+}
+
+model Dispute {
+  id             String          @id @default(cuid())
+  bookingId      String            @map("booking_id")
+  booking        Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  filedBy        DisputeFiledBy   @map("filed_by")
+  filedByUserId  String?           @map("filed_by_user_id")
+  filedByUser    User?            @relation("DisputeFiledBy", fields: [filedByUserId], references: [id])
+  description    String
+  evidencePhotos Json?             @map("evidence_photos")
+  status         String          @default("PENDING")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  @@map("disputes")
+}
