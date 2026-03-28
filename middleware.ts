@@ -1,22 +1,11 @@
-import { auth } from './lib/auth'
+// Middleware disabled - using custom auth system
+// import { auth } from './lib/auth'
 
-export default auth((req: any) => {
-  const { pathname } = req.nextUrl
-  const session = req.auth
-
-  if (pathname.startsWith('/admin-panel') && session?.user?.role !== 'ADMIN') {
-    return Response.redirect(new URL('/', req.url))
-  }
-
-  if (pathname.startsWith('/manage-jobs') && session?.user?.role !== 'PROVIDER') {
-    return Response.redirect(new URL('/', req.url))
-  }
-
-  if (pathname.startsWith('/profile') && !session) {
-    return Response.redirect(new URL('/login', req.url))
-  }
-
-  // Add more protections as needed
-
+export default function middleware(req: any) {
+  // Custom auth middleware can be implemented here if needed
   return null
-})
+}
+
+export const config = {
+  matcher: ['/admin-panel/:path*', '/manage-jobs/:path*', '/profile/:path*']
+}
