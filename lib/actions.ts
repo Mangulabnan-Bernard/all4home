@@ -3,28 +3,7 @@
 import { prisma } from './db'
 import { UserRole, VerificationStatus, BookingStatus, PaymentStatus } from './types'
 import bcrypt from 'bcryptjs'
-
-// Mock data for development when DB is not available
-const mockCategories = [
-  {
-    id: 'cat1',
-    name: 'Cleaning',
-    description: 'Professional cleaning services',
-    images: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    services: []
-  },
-  {
-    id: 'cat2', 
-    name: 'Plumbing',
-    description: 'Plumbing and pipe services',
-    images: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    services: []
-  }
-]
+import { mockServiceCategories, mockProviders } from '../mocks'
 
 export async function getCategories() {
   try {
@@ -43,7 +22,7 @@ export async function getCategories() {
     })
   } catch (error) {
     console.warn('Database not available, using mock categories:', error)
-    return mockCategories
+    return mockServiceCategories
   }
 }
 
@@ -62,7 +41,7 @@ export async function getProviders() {
     })
   } catch (error) {
     console.warn('Database not available, using mock providers:', error)
-    return []
+    return mockProviders
   }
 }
 
