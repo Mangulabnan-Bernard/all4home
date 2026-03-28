@@ -4,34 +4,66 @@ import { prisma } from './db'
 import { UserRole, VerificationStatus, BookingStatus, PaymentStatus } from './types'
 import bcrypt from 'bcryptjs'
 
+// Mock data for development when DB is not available
+const mockCategories = [
+  {
+    id: 'cat1',
+    name: 'Cleaning',
+    description: 'Professional cleaning services',
+    images: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    services: []
+  },
+  {
+    id: 'cat2', 
+    name: 'Plumbing',
+    description: 'Plumbing and pipe services',
+    images: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    services: []
+  }
+]
+
 export async function getCategories() {
-  return await prisma.serviceCategory.findMany({
-    include: {
-      services: {
-        include: {
-          provider: {
-            include: {
-              user: true
+  try {
+    return await prisma.serviceCategory.findMany({
+      include: {
+        services: {
+          include: {
+            provider: {
+              include: {
+                user: true
+              }
             }
           }
         }
       }
-    }
-  })
+    })
+  } catch (error) {
+    console.warn('Database not available, using mock categories:', error)
+    return mockCategories
+  }
 }
 
 export async function getProviders() {
-  return await prisma.provider.findMany({
-    include: {
-      user: true,
-      services: true,
-      reviews: {
-        include: {
-          customer: true
+  try {
+    return await prisma.provider.findMany({
+      include: {
+        user: true,
+        services: true,
+        reviews: {
+          include: {
+            customer: true
+          }
         }
       }
-    }
-  })
+    })
+  } catch (error) {
+    console.warn('Database not available, using mock providers:', error)
+    return []
+  }
 }
 
 export async function getUsers() {
