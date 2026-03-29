@@ -13,9 +13,9 @@ interface DB {
 
 const INITIAL_DATA: DB = {
   users: [
-    { id: 'u1', name: 'Admin User', email: 'admin@all4home.com', phone: '12345678', role: UserRole.ADMIN, darkMode: false },
-    { id: 'u2', name: 'John Customer', email: 'customer@test.com', phone: '87654321', role: UserRole.CUSTOMER, darkMode: false },
-    { id: 'u3', name: 'Sarah Pro', email: 'sarah@pro.com', phone: '11223344', role: UserRole.PROVIDER, darkMode: false },
+    { id: 'u1', name: 'Admin User', email: 'admin@all4home.com', phone: '12345678', role: UserRole.ADMIN, darkMode: false, password: 'hashed_password_1' },
+    { id: 'u2', name: 'John Customer', email: 'customer@test.com', phone: '87654321', role: UserRole.CUSTOMER, darkMode: false, password: 'hashed_password_2' },
+    { id: 'u3', name: 'Sarah Pro', email: 'sarah@pro.com', phone: '11223344', role: UserRole.PROVIDER, darkMode: false, password: 'hashed_password_3' }
   ],
   providers: [
     {
@@ -41,7 +41,11 @@ const INITIAL_DATA: DB = {
         lat: 34.0522,
         lng: -118.2437,
         address: 'Downtown Los Angeles, CA'
-      }
+      },
+      services: [
+        { id: 's1', providerId: 'p1', categoryId: 'c1', name: 'Deep House Cleaning', description: 'Comprehensive deep cleaning service', basePrice: 150, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 's2', providerId: 'p1', categoryId: 'c1', name: 'Kitchen Cleaning', description: 'Specialized kitchen cleaning service', basePrice: 80, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+      ]
     }
   ],
   categories: [
@@ -62,12 +66,21 @@ class MockDb {
   private data: DB;
 
   constructor() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    this.data = saved ? JSON.parse(saved) : INITIAL_DATA;
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      this.data = saved ? JSON.parse(saved) : INITIAL_DATA;
+    } else {
+      // Server-side: use initial data only
+      this.data = INITIAL_DATA;
+    }
   }
 
   private save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    // Only save to localStorage if we're in a browser environment
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    }
   }
 
   async getUsers() { return this.data.users; }
