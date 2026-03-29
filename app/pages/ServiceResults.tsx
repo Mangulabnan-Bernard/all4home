@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { db } from '../../lib/services/mockDb';
 import { ProviderProfile, User } from '../../lib/types';
+import { getProviders, getUsers } from '../../lib/actions';
 import { 
   Star, 
   ShieldCheck, 
@@ -33,8 +32,8 @@ const ServiceResults: React.FC<ServiceResultsProps> = ({ serviceName, categoryNa
 
   useEffect(() => {
     const load = async () => {
-      const allPros = await db.getProviders();
-      const allUsers = await db.getUsers();
+      const allPros = await getProviders();
+      const allUsers = await getUsers();
       
       const filtered = allPros.filter(p => p.category === categoryName || p.category === 'Cleaning'); 
       setPros(filtered);
