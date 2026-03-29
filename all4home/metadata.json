@@ -1,9 +1,0 @@
-
-{
-  "name": "All4Home - Premier Home Services Marketplace",
-  "description": "A comprehensive platform for booking home services with verified providers, secure escrow payments, and GPS-verified service delivery.",
-  "requestFramePermissions": [
-    "camera",
-    "geolocation"
-  ]
-}

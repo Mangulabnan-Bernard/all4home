@@ -2,8 +2,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { db } from '../../lib/services/mockDb';
 import { Booking, BookingStatus, ProviderProfile, User } from '../../lib/types';
+import { getBookings, getProviderByUserId, getUsers, updateBooking } from '../../lib/actions';
 import { 
   CheckCircle2, 
   Clock, 
@@ -41,15 +41,16 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ user }) => {
 
   useEffect(() => {
     const loadData = async () => {
-      const p = await db.getProviderByUserId(user.id);
+      const p = await getProviderByUserId(user.id);
       if (p) {
         setProvider(p);
-        const b = await db.getBookingsByUserId(user.id, user.role);
-        setBookings(b);
+        const b = await getBookings();
+        const userBookings = b.filter(booking => booking.providerId === p.id);
+        setBookings(userBookings);
         setStats({
-          earnings: b.filter(x => x.status === BookingStatus.COMPLETED).reduce((acc, curr) => acc + curr.totalAmount, 0),
-          completed: b.filter(x => x.status === BookingStatus.COMPLETED).length,
-          pending: b.filter(x => x.status === BookingStatus.PENDING).length
+          earnings: userBookings.filter(x => x.status === BookingStatus.COMPLETED).reduce((acc, curr) => acc + (curr.totalAmount || 0), 0),
+          completed: userBookings.filter(x => x.status === BookingStatus.COMPLETED).length,
+          pending: userBookings.filter(x => x.status === BookingStatus.PENDING).length
         });
       }
     };
@@ -57,15 +58,16 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ user }) => {
   }, [user]);
 
   const handleAction = async (id: string, status: BookingStatus) => {
-    await db.updateBooking(id, { status });
-    const b = await db.getBookingsByUserId(user.id, user.role);
-    setBookings(b);
+    await updateBooking(id, { status });
+    const b = await getBookings();
+    const userBookings = b.filter(booking => booking.providerId === provider?.id);
+    setBookings(userBookings);
   };
 
   const handleCheckIn = async (id: string) => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(async (pos) => {
-        await db.updateBooking(id, {
+        await updateBooking(id, {
           status: BookingStatus.IN_PROGRESS,
           gpsCheckIn: {
             lat: pos.coords.latitude,
@@ -73,8 +75,9 @@ const ProviderDashboard: React.FC<ProviderDashboardProps> = ({ user }) => {
             timestamp: new Date().toISOString()
           }
         });
-        const b = await db.getBookingsByUserId(user.id, user.role);
-        setBookings(b);
+        const b = await getBookings();
+        const userBookings = b.filter(booking => booking.providerId === provider?.id);
+        setBookings(userBookings);
       });
     }
   };
