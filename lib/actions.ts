@@ -3,7 +3,28 @@
 import { prisma } from './db'
 import { UserRole, VerificationStatus, BookingStatus, PaymentStatus } from './types'
 import bcrypt from 'bcryptjs'
-import { mockServiceCategories, mockProviders } from '../mocks'
+
+// Mock data for development when DB is not available
+const mockCategories = [
+  {
+    id: 'cat1',
+    name: 'Cleaning',
+    description: 'Professional cleaning services',
+    images: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    services: []
+  },
+  {
+    id: 'cat2', 
+    name: 'Plumbing',
+    description: 'Plumbing and pipe services',
+    images: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    services: []
+  }
+]
 
 export async function getCategories() {
   try {
@@ -22,7 +43,7 @@ export async function getCategories() {
     })
   } catch (error) {
     console.warn('Database not available, using mock categories:', error)
-    return mockServiceCategories
+    return mockCategories
   }
 }
 
@@ -41,23 +62,33 @@ export async function getProviders() {
     })
   } catch (error) {
     console.warn('Database not available, using mock providers:', error)
-    return mockProviders
+    return []
   }
 }
 
 export async function getUsers() {
-  return await prisma.user.findMany()
+  try {
+    return await prisma.user.findMany()
+  } catch (error) {
+    console.warn('Database not available, using mock users:', error)
+    return []
+  }
 }
 
 export async function getProviderByUserId(userId: string) {
-  return await prisma.provider.findFirst({ 
-    where: { userId },
-    include: {
-      user: true,
-      services: true,
-      reviews: true
-    }
-  })
+  try {
+    return await prisma.provider.findFirst({ 
+      where: { userId },
+      include: {
+        user: true,
+        services: true,
+        reviews: true
+      }
+    })
+  } catch (error) {
+    console.warn('Database not available, using mock provider by user id:', error)
+    return null
+  }
 }
 
 export async function createProvider(data: {
@@ -68,51 +99,71 @@ export async function createProvider(data: {
   idDocumentUrl: string
   certificateUrls: any
 }) {
-  return await prisma.provider.create({ 
-    data: {
-      ...data,
-      verificationStatus: VerificationStatus.PENDING
-    }
-  })
+  try {
+    return await prisma.provider.create({ 
+      data: {
+        ...data,
+        verificationStatus: VerificationStatus.PENDING
+      }
+    })
+  } catch (error) {
+    console.warn('Database not available, mock provider creation:', error)
+    return null
+  }
 }
 
 export async function updateProvider(id: string, data: any) {
-  return await prisma.provider.update({ where: { id }, data })
+  try {
+    return await prisma.provider.update({ where: { id }, data })
+  } catch (error) {
+    console.warn('Database not available, mock provider update:', error)
+    return null
+  }
 }
 
 export async function getBookings() {
-  return await prisma.booking.findMany({
-    include: {
-      customer: true,
-      provider: {
-        include: {
-          user: true
-        }
-      },
-      service: true,
-      payments: true,
-      reviews: true,
-      disputes: true
-    }
-  })
+  try {
+    return await prisma.booking.findMany({
+      include: {
+        customer: true,
+        provider: {
+          include: {
+            user: true
+          }
+        },
+        service: true,
+        payments: true,
+        reviews: true,
+        disputes: true
+      }
+    })
+  } catch (error) {
+    console.warn('Database not available, using mock bookings:', error)
+    return []
+  }
 }
 
 export async function getBookingById(id: string) {
-  return await prisma.booking.findUnique({ 
-    where: { id },
-    include: {
-      customer: true,
-      provider: {
-        include: {
-          user: true
-        }
-      },
-      service: true,
-      payments: true,
-      reviews: true,
-      disputes: true
-    }
-  })
+  try {
+    return await prisma.booking.findUnique({ 
+      where: { id },
+      include: {
+        customer: true,
+        provider: {
+          include: {
+            user: true
+          }
+        },
+        service: true,
+        payments: true,
+        reviews: true,
+        disputes: true
+      }
+    })
+  } catch (error) {
+    console.warn('Database not available, mock booking by id:', error)
+    return null
+  }
 }
 
 export async function createBooking(data: {
@@ -122,31 +173,46 @@ export async function createBooking(data: {
   scheduledTime: Date
   totalAmount: number
 }) {
-  return await prisma.booking.create({ 
-    data: {
-      ...data,
-      status: BookingStatus.PENDING
-    }
-  })
+  try {
+    return await prisma.booking.create({ 
+      data: {
+        ...data,
+        status: BookingStatus.PENDING
+      }
+    })
+  } catch (error) {
+    console.warn('Database not available, mock booking creation:', error)
+    return null
+  }
 }
 
 export async function updateBooking(id: string, data: any) {
-  return await prisma.booking.update({ where: { id }, data })
+  try {
+    return await prisma.booking.update({ where: { id }, data })
+  } catch (error) {
+    console.warn('Database not available, mock booking update:', error)
+    return null
+  }
 }
 
 export async function getProviderById(id: string) {
-  return await prisma.provider.findUnique({ 
-    where: { id },
-    include: {
-      user: true,
-      services: true,
-      reviews: {
-        include: {
-          customer: true
+  try {
+    return await prisma.provider.findUnique({ 
+      where: { id },
+      include: {
+        user: true,
+        services: true,
+        reviews: {
+          include: {
+            customer: true
+          }
         }
       }
-    }
-  })
+    })
+  } catch (error) {
+    console.warn('Database not available, mock provider by id:', error)
+    return null
+  }
 }
 
 export async function getReviewsByProviderId(providerId: string) {
